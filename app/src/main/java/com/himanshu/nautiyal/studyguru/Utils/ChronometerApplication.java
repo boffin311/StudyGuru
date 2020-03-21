@@ -32,7 +32,7 @@ public class ChronometerApplication  extends Application {
         String msg = time;
 
 
-        int icon = R.drawable.ic_play_arrow;
+        int icon = R.drawable.play;
 
         Intent notificationIntent = new Intent(this, MainActivity.class)
                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);

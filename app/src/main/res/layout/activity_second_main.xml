@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:padding="30dp"
     android:layout_height="match_parent"
     tools:context=".Activity.MainActivity">
     <FrameLayout
         android:layout_width="wrap_content"
+        android:layout_margin="30dp"
+        android:id="@+id/progressFrame"
+        android:layout_gravity="center"
+        android:layout_alignParentTop="true"
+        android:layout_above="@id/linearButtons"
         android:layout_height="wrap_content">
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
@@ -27,21 +31,21 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#000000"
             android:layout_gravity="center"
             android:orientation="vertical">
 
 
             <TextView
                 android:id="@+id/tv_timer"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:ellipsize="end"
+                android:background="@color/colorWhite"
                 android:scrollbars="none"
-                android:text="00:00:00:000"
+                android:text="00:00:00:00"
                 android:textAlignment="center"
-                android:textColor="#0dff00"
+                android:textColor="@color/colorBlack"
                 android:textSize="48dp"/>
 
         </LinearLayout>
@@ -49,36 +53,44 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="12"
-        android:background="#1f1d1d"
+        android:layout_height="wrap_content"
+
+        android:id="@+id/linearButtons"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
         android:orientation="horizontal">
 
-        <Button
+        <ImageView
             android:id="@+id/btn_start"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_margin="10dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:text="START"
-            android:textSize="18dp"
+            android:background="@color/colorTransParent"
+            android:src="@drawable/play"
             android:typeface="monospace"/>
-        <Button
+        <ImageView
             android:id="@+id/btn_pause"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="0dp"
+            android:layout_margin="10dp"
+            android:layout_height="60dp"
+            android:src="@drawable/pause"
+            android:background="@color/colorTransParent"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:text="Pause"
-            android:textSize="18dp"/>
-        <Button
+           />
+        <ImageView
             android:id="@+id/btn_stop"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
             android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@color/colorTransParent"
+            android:src="@drawable/reset"
             android:layout_weight="1"
-            android:text="STOP"
-            android:textSize="18dp"/>
+            />
     </LinearLayout>
 
-</LinearLayout>
+
+</RelativeLayout>

@@ -1,45 +1,49 @@
 package com.himanshu.nautiyal.studyguru.Activity;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.himanshu.nautiyal.studyguru.R;
 import com.himanshu.nautiyal.studyguru.Utils.Chronometer;
 import com.himanshu.nautiyal.studyguru.Utils.ChronometerApplication;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     public static final String startTime = "START_TIME";
     public static final String isChronoRunning = "CHRONO_WAS_RUNNING";
     SharedPreferences sharedPreferences;
     public static final String timerText = "TV_TIMER_TEXT";
-    public static final String TAG="MAIN";
+    public static final String TAG = "MAIN";
 
-    public static final String LAP_COUNTER  = "LAP_COUNTER";
-    boolean isResumed=false;
-    long tBuff=0;
+    public static final String LAP_COUNTER = "LAP_COUNTER";
+    int state = 0;
+    long tBuff = 0;
     //Member variables to access UI Elements
-    Button btnStart, btnStop,btnPause; //buttons
+    ImageView btnStart, btnStop, btnPause; //buttons
     TextView tvTimer; //timer textview
-//    EditText mEtLaps; //laps text view
+    //    EditText mEtLaps; //laps text view
     ScrollView mSvLaps; //scroll view which wraps the et_laps
 
     //keep track of how many times btn_lap was clicked
     int lapCounter = 1;
-
+    ViewGroup parent;
     //Instance of Chronometer
     Chronometer mChrono;
-CircularProgressBar circularProgressBar;
+    CircularProgressBar circularProgressBar;
     //Thread for chronometer
     Thread mThreadChrono;
 
@@ -55,14 +59,34 @@ CircularProgressBar circularProgressBar;
 
         mContext = this;
 
-        btnStart =  findViewById(R.id.btn_start);
+        parent = (ViewGroup) findViewById(android.R.id.content);
+
+        btnStart = findViewById(R.id.btn_start);
 //        mBtnLap = findViewById(R.id.btn_lap);
-        btnStop =  findViewById(R.id.btn_stop);
-        btnPause=findViewById(R.id.btn_pause);
-        circularProgressBar=findViewById(R.id.circularProgressBar);
-        sharedPreferences=getSharedPreferences(getResources().getString(R.string.packageName),MODE_PRIVATE);
-        sharedPreferences.edit().putInt("goal",6).apply();
+        btnStop = findViewById(R.id.btn_stop);
+        btnPause = findViewById(R.id.btn_pause);
+        circularProgressBar = findViewById(R.id.circularProgressBar);
+        sharedPreferences = getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE);
+        sharedPreferences.edit().putInt("goal", 6).apply();
         tvTimer = (TextView) findViewById(R.id.tv_timer);
+
+         state=sharedPreferences.getInt("state",0);
+
+        Log.d(TAG, "onCreate: "+state);
+        if(state==0){
+            btnStart.setVisibility(View.VISIBLE);
+            btnStop.setVisibility(View.VISIBLE);
+            btnPause.setVisibility(View.GONE);
+        }
+        else{
+
+            btnStart.setVisibility(View.GONE);
+            btnStop.setVisibility(View.GONE);
+            btnPause.setVisibility(View.VISIBLE);
+        }
+
+
+
 //        mEtLaps = (EditText) findViewById(R.id.et_laps);
 //        mEtLaps.setEnabled(false); //prevent the et_laps to be editable
 
@@ -74,26 +98,37 @@ CircularProgressBar circularProgressBar;
             @Override
             public void onClick(View v) {
                 //if the chronometer has not been instantiated before...
-                if(mChrono == null) {
-                     tBuff= getSharedPreferences(getResources().getString(R.string.packageName),MODE_PRIVATE).getLong("tBuff",0);
-                //instantiate the chronometer
-                    Log.d(TAG, "onClick: "+tBuff);
-                        mChrono = new Chronometer(mContext);
-                        mChrono.settBuff(tBuff);
-                        //run the chronometer on a separate thread
-                        mThreadChrono = new Thread(mChrono);
-                        mThreadChrono.start();
-                        //start the chronometer!
-                        mChrono.start();
-                        isResumed = true;
+                if (mChrono == null) {
+                    tBuff = getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).getLong("tBuff", 0);
+                    //instantiate the chronometer
+                    Log.d(TAG, "onClick: " + tBuff);
+                    mChrono = new Chronometer(mContext);
+                    mChrono.settBuff(tBuff);
+                    //run the chronometer on a separate thread
+                    mThreadChrono = new Thread(mChrono);
+                    mThreadChrono.start();
+                    //start the chronometer!
+                    mChrono.start();
+                    state = 1;
 
-                        //clear the perilously populated et_laps
+                    //clear the perilously populated et_laps
 //                    mEtLaps.setText(""); //empty string!
 
-                        //reset the lap counter
-                        lapCounter = 1;
+                    //reset the lap counter
+                    lapCounter = 1;
+
+                    Animation slideNegativeRight = AnimationUtils.loadAnimation(MainActivity.this, R.anim.translate_negative_right);
+                    Animation slideNegativeLeft=AnimationUtils.loadAnimation(MainActivity.this, R.anim.translate_negative_left);
+
+                    Animation scaleUp=AnimationUtils.loadAnimation(MainActivity.this, R.anim.scale_positive);
 
 
+                    btnStart.setVisibility(View.GONE);
+                    btnStart.setAnimation(slideNegativeLeft);
+                    btnStop.setVisibility(View.GONE);
+                    btnStop.setAnimation(slideNegativeRight);
+                    btnPause.setVisibility(View.VISIBLE);
+                    btnPause.setAnimation(scaleUp);
 
 
                 }
@@ -105,16 +140,28 @@ CircularProgressBar circularProgressBar;
             @SuppressLint("CommitPrefEdits")
             @Override
             public void onClick(View v) {
-                if(mChrono!=null){
-                    long val = System.currentTimeMillis()-mChrono.getStartTime();
+                if (mChrono != null) {
+                    long val = System.currentTimeMillis() - mChrono.getStartTime();
                     mChrono.pause(val);
-                    val+=sharedPreferences.getLong("tBuff",0);
-                    sharedPreferences.edit().putLong("tBuff",val).apply();
-//                    Log.d(TAG, "onClick: "+val+"  "+getSharedPreferences(getResources().getString(R.string.packageName),MODE_PRIVATE).getLong("tBuff",0));
+                    val += sharedPreferences.getLong("tBuff", 0);
+                    sharedPreferences.edit().putLong("tBuff", val).apply();
+                    Log.d(TAG, "onClick: "+val+"  "+getSharedPreferences(getResources().getString(R.string.packageName),MODE_PRIVATE).getLong("tBuff",0));
 
                     mThreadChrono.interrupt();
                     mThreadChrono = null;
                     mChrono = null;
+                    state = 0;
+                    Animation slideRight = AnimationUtils.loadAnimation(MainActivity.this, R.anim.translate_right);
+                    Animation slideLeft=AnimationUtils.loadAnimation(MainActivity.this, R.anim.translate_left);
+
+                    Animation scaleDown=AnimationUtils.loadAnimation(MainActivity.this, R.anim.scale_negative);
+                    btnStart.setVisibility(View.VISIBLE);
+                    btnStart.setAnimation(slideLeft);
+                    btnStop.setVisibility(View.VISIBLE);
+                    btnStop.setAnimation(slideRight);
+                    btnPause.setVisibility(View.GONE);
+                    btnPause.setAnimation(scaleDown);
+
                 }
             }
         });
@@ -123,25 +170,27 @@ CircularProgressBar circularProgressBar;
             @Override
             public void onClick(View v) {
                 //if the chronometer had been instantiated before...
-                if(mChrono != null) {
+                if (mChrono != null) {
                     //stop the chronometer
 
                     mChrono.stop();
                     //stop the thread
                     tvTimer.setText("00:00:00:00");
-                        mThreadChrono.interrupt();
-
+                    mThreadChrono.interrupt();
+                    state = 0;
 
                     mThreadChrono = null;
                     //kill the chrono class
                     mChrono = null;
 
-                    getSharedPreferences(getResources().getString(R.string.packageName),MODE_PRIVATE).edit().putLong("tBuff",0).apply();
-                }
-                else{
+                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
+                } else {
                     tvTimer.setText("00:00:00:00");
-                    getSharedPreferences(getResources().getString(R.string.packageName),MODE_PRIVATE).edit().putLong("tBuff",0).apply();
+                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
                 }
+                btnStart.setVisibility(View.VISIBLE);
+                btnStop.setVisibility(View.VISIBLE);
+                btnPause.setVisibility(View.GONE);
             }
         });
 
@@ -169,17 +218,18 @@ CircularProgressBar circularProgressBar;
 //            }
 //        });
     }
+
     public void updateTimerText(final String timeAsText, final int hr, final int min) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 tvTimer.setText(timeAsText);
-                int goalHr=sharedPreferences.getInt("goal",1);
-                int currentValue=(hr*60)+(min);
-                float percentage=(currentValue/(float)(goalHr*60))*100;
-                Log.d(TAG, "run: "+"Here");
+                int goalHr = sharedPreferences.getInt("goal", 1);
+                int currentValue = (hr * 60) + (min);
+                float percentage = (currentValue / (float) (goalHr * 60)) * 100;
+                Log.d(TAG, "run: " + "Here");
                 circularProgressBar.setProgress(percentage);
-                Log.d(TAG, "run: "+"here");
+                Log.d(TAG, "run: " + "here");
 
 
             }
@@ -192,9 +242,9 @@ CircularProgressBar circularProgressBar;
         loadInstance();
 
         //stop background services and notifications
-        Log.d("MAIN",getApplication().toString());
-        ((ChronometerApplication)getApplication()).stopBackgroundServices();
-        ((ChronometerApplication)getApplication()).cancelNotification();
+        Log.d("MAIN", getApplication().toString());
+        ((ChronometerApplication) getApplication()).stopBackgroundServices();
+        ((ChronometerApplication) getApplication()).cancelNotification();
     }
 
     @Override
@@ -202,9 +252,9 @@ CircularProgressBar circularProgressBar;
         super.onPause();
         saveInstance();
 
-        if(mChrono != null && mChrono.isRunning()) {
+        if (mChrono != null && mChrono.isRunning()) {
             //start background notification and timer
-            ((ChronometerApplication)getApplication())
+            ((ChronometerApplication) getApplication())
                     .startBackgroundServices(mChrono.getStartTime());
         }
     }
@@ -216,7 +266,7 @@ CircularProgressBar circularProgressBar;
 
         //When back button is pressed, app will be destoyed by OS. We do not want this to stop us
         //from showing the notification if the chronometer is running!
-        if(mChrono == null || !mChrono.isRunning()) {
+        if (mChrono == null || !mChrono.isRunning()) {
             //stop background services and notifications
             ((ChronometerApplication) getApplication()).stopBackgroundServices();
             ((ChronometerApplication) getApplication()).cancelNotification();
@@ -230,20 +280,20 @@ CircularProgressBar circularProgressBar;
      * will pause the application, we save some instance values, to resume back from last state
      */
     private void saveInstance() {
-        SharedPreferences pref = getPreferences(MODE_PRIVATE);
+        SharedPreferences pref = sharedPreferences;
         SharedPreferences.Editor editor = pref.edit();
 
         //TODO move tags to a static class
-        if(mChrono != null && mChrono.isRunning()) {
+        if (mChrono != null && mChrono.isRunning()) {
             editor.putBoolean(isChronoRunning, mChrono.isRunning());
-            editor.putBoolean("isResumed",isResumed);
+            editor.putInt("state", state);
             editor.putLong(startTime, mChrono.getStartTime());
             editor.putInt(LAP_COUNTER, lapCounter);
         } else {
             editor.putBoolean(isChronoRunning, false);
             editor.putLong(startTime, 0); //0 means chronometer was not active! a redundant check!
             editor.putInt(LAP_COUNTER, 1);
-            editor.putLong("tBuff",tBuff);
+            editor.putInt("state", state);
         }
 
         editor.putString(timerText, tvTimer.getText().toString());
@@ -256,19 +306,20 @@ CircularProgressBar circularProgressBar;
      */
     private void loadInstance() {
 
-        SharedPreferences pref = getPreferences(MODE_PRIVATE);
-       sharedPreferences.getLong(getResources().getString(R.string.packageName),MODE_PRIVATE);
-       long pausedTime=sharedPreferences.getLong("tBuff",0);
+        SharedPreferences pref = sharedPreferences;
+        sharedPreferences.getLong(getResources().getString(R.string.packageName), MODE_PRIVATE);
+        long pausedTime = sharedPreferences.getLong("tBuff", 0);
+        Log.d(TAG, "loadInstance: "+pausedTime);
         //if chronometer was running
-        if(pref.getBoolean(isChronoRunning, false)) {
+        if (pref.getBoolean(isChronoRunning, false)) {
             //get the last start time from the bundle
             long lastStartTime = pref.getLong(startTime, 0);
             //if the last start time is not 0
-            if(lastStartTime != 0) { //because 0 means value was not saved correctly!
+            if (lastStartTime != 0) { //because 0 means value was not saved correctly!
 
-                if(mChrono == null) { //make sure we dont create new instance and thread!
+                if (mChrono == null) { //make sure we dont create new instance and thread!
 
-                    if(mThreadChrono != null) { //if thread exists...first interrupt and nullify it!
+                    if (mThreadChrono != null) { //if thread exists...first interrupt and nullify it!
                         mThreadChrono.interrupt();
                         mThreadChrono = null;
                     }
@@ -289,7 +340,7 @@ CircularProgressBar circularProgressBar;
 
 
         String oldTvTimerText = pref.getString(timerText, "");
-        if(!oldTvTimerText.isEmpty()){
+        if (!oldTvTimerText.isEmpty()) {
             tvTimer.setText(oldTvTimerText);
         }
     }

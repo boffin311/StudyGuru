@@ -2,7 +2,10 @@ package com.himanshu.nautiyal.studyguru.Activity;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
 import android.util.Log;
@@ -10,18 +13,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.himanshu.nautiyal.studyguru.Database.DataList;
+import com.himanshu.nautiyal.studyguru.Database.EachDayDatabase;
+import com.himanshu.nautiyal.studyguru.Database.MyDatabaseHelper;
 import com.himanshu.nautiyal.studyguru.R;
 import com.himanshu.nautiyal.studyguru.Utils.Chronometer;
 import com.himanshu.nautiyal.studyguru.Utils.ChronometerApplication;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
 
 public class MainActivity extends AppCompatActivity {
+
+    AlertDialog.Builder alertDialoge;
 
     public static final String startTime = "START_TIME";
     public static final String isChronoRunning = "CHRONO_WAS_RUNNING";
@@ -41,11 +52,13 @@ public class MainActivity extends AppCompatActivity {
     //keep track of how many times btn_lap was clicked
     int lapCounter = 1;
     ViewGroup parent;
+    SQLiteDatabase db;
     //Instance of Chronometer
     Chronometer mChrono;
     CircularProgressBar circularProgressBar;
     //Thread for chronometer
     Thread mThreadChrono;
+    Button btnNext;
 
     //Reference to the MainActivity (this class!)
     Context mContext;
@@ -60,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
         mContext = this;
 
         parent = (ViewGroup) findViewById(android.R.id.content);
+        createAlertDialog();
+        MyDatabaseHelper myDataBaseHelper=new MyDatabaseHelper(this);
+        db = myDataBaseHelper.getWritableDatabase();
 
         btnStart = findViewById(R.id.btn_start);
 //        mBtnLap = findViewById(R.id.btn_lap);
@@ -69,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE);
         sharedPreferences.edit().putInt("goal", 6).apply();
         tvTimer = (TextView) findViewById(R.id.tv_timer);
-
+        btnNext=findViewById(R.id.btnNext);
          state=sharedPreferences.getInt("state",0);
 
         Log.d(TAG, "onCreate: "+state);
@@ -84,6 +100,13 @@ public class MainActivity extends AppCompatActivity {
             btnStop.setVisibility(View.GONE);
             btnPause.setVisibility(View.VISIBLE);
         }
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this,DataShowActivity.class);
+                startActivity(intent);
+            }
+        });
 
 
 
@@ -99,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //if the chronometer has not been instantiated before...
                 if (mChrono == null) {
+                    if(tvTimer.getText().equals("00:00:00:00")){
+
+                    }
                     tBuff = getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).getLong("tBuff", 0);
                     //instantiate the chronometer
                     Log.d(TAG, "onClick: " + tBuff);
@@ -170,27 +196,29 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 //if the chronometer had been instantiated before...
-                if (mChrono != null) {
-                    //stop the chronometer
-
-                    mChrono.stop();
-                    //stop the thread
-                    tvTimer.setText("00:00:00:00");
-                    mThreadChrono.interrupt();
-                    state = 0;
-
-                    mThreadChrono = null;
-                    //kill the chrono class
-                    mChrono = null;
-
-                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
-                } else {
-                    tvTimer.setText("00:00:00:00");
-                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
-                }
-                btnStart.setVisibility(View.VISIBLE);
-                btnStop.setVisibility(View.VISIBLE);
-                btnPause.setVisibility(View.GONE);
+//                if (mChrono != null) {
+//                    //stop the chronometer
+//
+//                    mChrono.stop();
+//                    //stop the thread
+//                    tvTimer.setText("00:00:00:00");
+//                    mThreadChrono.interrupt();
+//                    state = 0;
+//
+//                    mThreadChrono = null;
+//                    //kill the chrono class
+//                    mChrono = null;
+//
+//                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
+//                } else {
+//                    tvTimer.setText("00:00:00:00");
+//                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
+//                }
+//                btnStart.setVisibility(View.VISIBLE);
+//                btnStop.setVisibility(View.VISIBLE);
+//                btnPause.setVisibility(View.GONE);
+            if (mChrono!=null)
+                alertDialoge.show();
             }
         });
 
@@ -343,5 +371,42 @@ public class MainActivity extends AppCompatActivity {
         if (!oldTvTimerText.isEmpty()) {
             tvTimer.setText(oldTvTimerText);
         }
+    }
+    void createAlertDialog(){
+        alertDialoge=new AlertDialog.Builder(this);
+        alertDialoge.setTitle("Reset and Save");
+        alertDialoge.setMessage("Are you Done  studying and want to call it a day ");
+        alertDialoge.setPositiveButton("Reset", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (mChrono != null) {
+                    //stop the chronometer
+
+                    mChrono.stop();
+                    //stop the thread
+                    tvTimer.setText("00:00:00:00");
+                    mThreadChrono.interrupt();
+                    state = 0;
+
+                    mThreadChrono = null;
+                    //kill the chrono class
+                    mChrono = null;
+
+                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
+                } else {
+                    tvTimer.setText("00:00:00:00");
+                    getSharedPreferences(getResources().getString(R.string.packageName), MODE_PRIVATE).edit().putLong("tBuff", 0).apply();
+                }
+//                EachDayDatabase.insertPlayer(db,new DataList(""));
+                btnStart.setVisibility(View.VISIBLE);
+                btnStop.setVisibility(View.VISIBLE);
+                btnPause.setVisibility(View.GONE);
+            }
+        }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Toast.makeText(mContext, "Ok, Keep Studying", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

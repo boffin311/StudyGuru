@@ -15,6 +15,11 @@
         android:layout_alignParentTop="true"
         android:layout_above="@id/linearButtons"
         android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:id="@+id/btnNext"
+            android:text="NEXt"
+            android:layout_height="wrap_content"/>
         <com.mikhaellopez.circularprogressbar.CircularProgressBar
             android:id="@+id/circularProgressBar"
             android:layout_width="wrap_content"
